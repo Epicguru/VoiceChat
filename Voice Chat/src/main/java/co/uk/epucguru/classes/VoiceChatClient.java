@@ -14,7 +14,7 @@ public class VoiceChatClient {
 	private AudioRecorder recorder;
 	private AudioDevice player;
 	private int sampleRate = 22050; // Default and standard.
-	private float sendRate = 3f;
+	private float sendRate = 20f;
 	private short[] data;
 	private float timer;
 	private boolean ready = true;
