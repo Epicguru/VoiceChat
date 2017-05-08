@@ -51,7 +51,7 @@ public class TestGame extends Game {
 	public void create() {
 		try{
 			
-			if(false){
+			if(true){
 				// Run server
 				this.server = new Server(22050, 22050);
 				server.bind(7777, 7777);
@@ -71,7 +71,7 @@ public class TestGame extends Game {
 			client.connect(5000, "localhost", 7777, 7777);
 			
 			this.sender = new VoiceChatClient(client.getKryo());
-			this.sender.addReciever(client);
+			this.sender.addReceiver(client);
 			
 			
 		}catch(Exception e){

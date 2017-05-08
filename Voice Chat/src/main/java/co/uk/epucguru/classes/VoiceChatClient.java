@@ -10,6 +10,18 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
+/**
+ * A class that is used to send and receive voice chat. Works using KryoNet and LibGDX.
+ * See <a href="https://github.com/Epicguru/VoiceChat">the github page</a> for the project and for my other projects.
+ * <li>IMPORTANT:
+ * You are allowed to use this mini-library in any way you wish. You may use it in any project, commercial or not, 
+ * and feel free to edit the source code. Just please note that I put some time and effort into making this, so it would be great if
+ * you left this here so that people know that it was me that made this. Thanks. 
+ * (Also if you are feeling generous or you appreciate what I have done, it would be great if you put me in the 'credits' section of you game or project.)
+ * 
+ * @author James Billy, 2017
+ *
+ */
 public class VoiceChatClient implements Disposable{
 
 	/**
@@ -30,7 +42,7 @@ public class VoiceChatClient implements Disposable{
 	 * <li>See <code>client.getKryo()</code> and <code>server.getKryo()</code>.
 	 * @param sampleRate The audio sampling rate, as in samples per second. This defaults to {@link #DEFAULT_SAMPLE_RATE}.
 	 * @see 
-	 * <li> {@link #addReciever(Client)} to allow this voice client to play audio sent from other clients.
+	 * <li> {@link #addReceiver(Client)} to allow this voice client to play audio sent from other clients.
 	 * <li> {@link #sendVoice(Client, float)} to send the users voice to other clients, through the server.
 	 */
 	public VoiceChatClient(Kryo kryo, int sampleRate){
@@ -44,7 +56,7 @@ public class VoiceChatClient implements Disposable{
 	 * @param kryo The {@link Kryo} object that exists in KryoNet Clients and Servers.
 	 * <li>See <code>client.getKryo()</code> and <code>server.getKryo()</code>.
 	 * @see 
-	 * <li> {@link #addReciever(Client)} to allow this voice client to play audio sent from other clients.
+	 * <li> {@link #addReceiver(Client)} to allow this voice client to play audio sent from other clients.
 	 * <li> {@link #sendVoice(Client, float)} to send the users voice to other clients, through the server.
 	 */
 	public VoiceChatClient(Kryo kryo){
@@ -97,7 +109,7 @@ public class VoiceChatClient implements Disposable{
 	 * from the server!
 	 * @param client The client that audio data will be sent to from the server. Just use the normal client.
 	 */
-	public void addReciever(Client client){
+	public void addReceiver(Client client){
 		
 		if(this.player == null)
 			this.createPlayer();
@@ -133,7 +145,7 @@ public class VoiceChatClient implements Disposable{
 	}
 	
 	@Deprecated
-	public void addReciever(Server server){
+	public void addReceiver(Server server){
 		
 		if(this.player == null)
 			this.createPlayer();
