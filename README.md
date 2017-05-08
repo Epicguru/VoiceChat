@@ -13,7 +13,9 @@ Instead to install in your project, just copy-paste the three files located in t
 I assume that you have a good understanding and control of Kryonet and Client/Server architechture. However here is an example of implementing the voice chat in both client and server side.
 ### Client Side
 ```java
-public void start(){
+public void start(){ 
+  // A method called only once at the beginning of the the program.
+  // In LibGDX it is called create().
   
   // This buffer size is used when sending data in kryonet.
   // If you game crashes due to Kryonet/VoiceChat try making this value larger.
@@ -36,10 +38,11 @@ public void start(){
 
 public void update(VoiceChatClient voice, Client client){
   // This is some sort of update method that is called periodically in you app.
+  // In LibGDX it is called render(). You know the drill.
   
   // This variable is the time, in seconds, between the calls to update().
-  // You may have to calculate this youself. LibGDX has this built in, it is Gdx.graphics.getDeltaTime().
-  float deltaTime = 1f / 60f; // Assumes that the update method is called exactly 60 times per second.
+  // LibGDX has done this for you!
+  float deltaTime = Gdx.graphics.getDeltaTime();
   
   // This would be replaced with some sort of user input, such as pressing a button.
   boolean sendAudio = true;
@@ -54,6 +57,8 @@ public void update(VoiceChatClient voice, Client client){
 ### Server Side
 ``` java
 public void start(){
+  // A method called only once at the beginning of the the program.
+  // In LibGDX it is called create().
   
   // First determine buffer size.
   int bufferSize = 22050; // Recommened value.
