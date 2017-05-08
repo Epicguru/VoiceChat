@@ -1,4 +1,4 @@
-package co.uk.epucguru.main;
+package co.uk.epucguru.example;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -11,16 +11,22 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.esotericsoftware.kryonet.Client;
+import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
 import co.uk.epucguru.classes.VoiceChatClient;
+import co.uk.epucguru.classes.VoiceChatServer;
 
 public class TestGame extends Game {
 
 	private Color backgroundColour = new Color(.9f, .9f, .9f, 1);
+	
 	private Server server;
 	private Client client;
-	private VoiceChatClient sender, reciever;
+	private VoiceChatClient sender;
+	private VoiceChatServer relay;
+	
 	private Batch batch;
 	private BitmapFont font;
 	
@@ -44,18 +50,29 @@ public class TestGame extends Game {
 	@Override
 	public void create() {
 		try{
-			this.server = new Server(22050, 22050);
-			server.bind(7777, 7777);
-			server.start();
 			
+			if(false){
+				// Run server
+				this.server = new Server(22050, 22050);
+				server.bind(7777, 7777);
+				server.start();	
+				
+				relay = new VoiceChatServer(server.getKryo());
+				
+				server.addListener(new Listener(){
+					public void received(Connection connection, Object object) {
+						relay.relayVoice(connection, object, server);
+					}					
+				});
+			}
+
 			this.client = new Client(22050, 22050);
 			client.start();
 			client.connect(5000, "localhost", 7777, 7777);
 			
 			this.sender = new VoiceChatClient(client.getKryo());
-			this.reciever = new VoiceChatClient(server.getKryo());
+			this.sender.addReciever(client);
 			
-			reciever.addReciever(server);
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -72,24 +89,23 @@ public class TestGame extends Game {
 		Gdx.gl.glClearColor(backgroundColour.r, backgroundColour.g, backgroundColour.b, backgroundColour.a);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
-		this.server.getConnections()[0].updateReturnTripTime();
-		Gdx.graphics.setTitle("Voice Chat Test by James Billy - " + Gdx.graphics.getFramesPerSecond() + "fps, " + this.server.getConnections()[0].getReturnTripTime() + " ping.");
+		Gdx.graphics.setTitle("Voice Chat Test by James Billy - " + Gdx.graphics.getFramesPerSecond() + "fps");
 		
 		batch.begin();
 		font.setColor(Color.BLACK);
+		
 		// Test only
 		if(Gdx.input.isKeyPressed(Keys.SPACE)){			
 			
 			// This line here is important, it will send audio when called.
-			this.sender.update(this.client, Gdx.graphics.getDeltaTime());	
+			this.sender.sendVoice(this.client, Gdx.graphics.getDeltaTime());	
 			
 			// Test only
 			font.draw(batch, "Now sending audio...", 10, 20);			
 		}else{
 			// Test only
-			font.draw(batch, "Press SPACE to send audio to yourself!\n"
-					+ "You may here some echo. This does not happen in a real game/app.\n"
-					+ "There will also be latency. This is unavoidable, sorry.", 10, 60);
+			font.draw(batch, "Press SPACE to send audio!\n"
+					+ "There may be latency. This is unavoidable, sorry.", 10, 60);
 		}
 		batch.end();
 	}

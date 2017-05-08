@@ -3,13 +3,14 @@ package co.uk.epucguru.classes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.AudioDevice;
 import com.badlogic.gdx.audio.AudioRecorder;
+import com.badlogic.gdx.utils.Disposable;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
-public class VoiceChatClient {
+public class VoiceChatClient implements Disposable{
 
 	private AudioRecorder recorder;
 	private AudioDevice player;
@@ -45,6 +46,10 @@ public class VoiceChatClient {
 		this.player = Gdx.audio.newAudioDevice(this.getSampleRate(), true);
 	}
 	
+	public int getRecomendedBufferSize(){
+		return (int) (this.getSampleRate() / (float)this.getSampleRate() * 2f);
+	}
+	
 	protected void registerNetObjects(Kryo kryo){
 		kryo.register(short[].class);
 		kryo.register(VoiceNetData.class);
@@ -58,6 +63,8 @@ public class VoiceChatClient {
 		
 		client.addListener(new Listener(){
 			public void received(Connection connection, Object object) {
+				
+				// Only read objects of the correct type.
 				if(object instanceof VoiceNetData){
 					
 					// Read data
@@ -65,7 +72,10 @@ public class VoiceChatClient {
 					short[] data = message.getData();
 					
 					// Play audio
-					player.writeSamples(data, 0, data.length);
+					Thread thread = new Thread(() -> {						
+						player.writeSamples(data, 0, data.length);
+					});
+					thread.start();
 				}
 			}			
 		});
@@ -86,13 +96,16 @@ public class VoiceChatClient {
 					short[] data = message.getData();
 					
 					// Play audio
-					player.writeSamples(data, 0, data.length);
+					Thread thread = new Thread(() -> {						
+						player.writeSamples(data, 0, data.length);
+					});
+					thread.start();
 				}
 			}			
 		});
 	}
 	
-	public void update(Client client, float delta){
+	public void sendVoice(Client client, float delta){
 		
 		float interval = 1f / this.getSendRate();
 		timer += delta;
@@ -117,6 +130,7 @@ public class VoiceChatClient {
 				if(this.recorder == null) this.createRecorder();
 				this.recorder.read(data, 0, packetSize);
 				
+				// Send to server, this will not block but may affect networking...
 				client.sendUDP(new VoiceNetData(data));
 				
 				ready = true;
@@ -124,4 +138,12 @@ public class VoiceChatClient {
 			thread.start();			
 		}		
 	}	
+	
+	public void dispose(){
+		this.data = null;
+		this.player.dispose();
+		this.player = null;
+		this.recorder.dispose();
+		this.recorder = null;
+	}
 }
