@@ -1,43 +1,86 @@
 # Voice Chat by James Billy
-A simple voice chat system using LibGDX and Kryonet.
+A simple voice chat system using Kryonet and LibGDX.
+## Info
+You are allowed to use this mini-library in any way you wish. You may use it in any project, commercial or not, and feel free to edit the source code. Just please note that I put some time and effort into making this, so it would be great if you left this here so that people know that it was me that made this. Thanks. 
+(Also if you are feeling generous or you appreciate what I have done, it would be great if you put me in the 'credits' section of you game or project.)
 ## How to install
 There is no gradle/maven dependency for this project for two reasons:
 1. It is so simple and compact that it is honestly not worthwhile :D.
 2. Handing it to you as source files allows you to edit, improve and customise the code for you needs.
 
-Instead to install in your project, just copy-paste the two files located in the *co.uk.epicguru.classes* package. You will need to change the package
-declaration for it to compile.
+Instead to install in your project, just copy-paste the three files located in the *co.uk.epicguru.classes* package. You will need to change the package declaration for it to compile.
 ## How to use
-I assume that you have a good understanding and control of Kryonet and Client/Server architechture.
-This is the code necessary for the client side of things.
+I assume that you have a good understanding and control of Kryonet and Client/Server architechture. However here is an example of implementing the voice chat in both client and server side.
+### Client Side
 ```java
-public static void main(String[] args){
+public void start(){
   
   // This buffer size is used when sending data in kryonet.
   // If you game crashes due to Kryonet/VoiceChat try making this value larger.
-  int bufferSize = 1024;
+  int bufferSize = 22050; // Recommended value.
   
-  // Create client using the buffer
+  // Create KryoNet client using the buffer.
   Client client = new Client(bufferSize, bufferSize);
   
-  // Here you would connect to the server
+  // Here you would connect to the server.
   // CONNECTION CODE GOES HERE
   
   // Create a voice chat client, that can send audio data to the server.
-  VoceChatClient voiceClient = new VoiceChatClient(client.getKryo()); // We need to pass the Kryo object of our client.
+  // We need to pass the Kryo object of our client.
+  Kryo kryo = client.getKryo();
+  VoceChatClient voiceClient = new VoiceChatClient(kryo);
   
+  // Finally, allow the client to play audio recieved from the server.
+  voiceClient.addReceiver(client);
 }
 
 public void update(VoiceChatClient voice, Client client){
   // This is some sort of update method that is called periodically in you app.
   
-  // This variable is the time, in seconds, between the calls to update()
-  // You may have to calculate this youself, but libraries such as LibGDX have a deltaTime value built in.
+  // This variable is the time, in seconds, between the calls to update().
+  // You may have to calculate this youself. LibGDX has this built in, it is Gdx.graphics.getDeltaTime().
   float deltaTime = 1f / 60f; // Assumes that the update method is called exactly 60 times per second.
+  
+  // This would be replaced with some sort of user input, such as pressing a button.
+  boolean sendAudio = true;
   
   if(sendAudio){
     // Sends audio data to the server.
-    voice.update(client);
+    voice.sendVoice(client, deltaTime);
   }
 }
 ```
+
+### Server Side
+``` java
+public void start(){
+  
+  // First determine buffer size.
+  int bufferSize = 22050; // Recommened value.
+
+  // Make a KryoNet server.
+  Server server = new Server(bufferSize, bufferSize);
+  
+  // Now make voice chat server.
+  // NOTE: This is not like a Teamspeak or a Discord style server, it is just a relay utility that 'bounces'
+  //       voice chat back to clients.
+  // We also need the Kryo object of the server.
+  Kryo kryo = server.getKryo();
+  VoiceChatServer voiceServer = new VoiceChatServer(kryo);
+  
+   // Now we need to enable the server to transmit audio data.
+   server.addListener(new Listener(){
+	    public void received(Connection connection, Object object) {
+          // This 'bounces' back any audio data sent from clients.
+	        relay.relayVoice(connection, object, server);
+	    }					
+	 });
+   
+   // Done! No updating necessary for the server.
+}
+```
+
+## Conclusion
+Well I hope that the exmaples and implementation are clear enough. 
+Please note that the examples above have not been compiled, and may contain mistakes. Kindly point them out so I can fix any, thanks!
+The repository does also contain a crude testing project, which uses libgdx. You can run it but it is not user friendly at all. Soz.
