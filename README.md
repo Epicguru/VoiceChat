@@ -8,7 +8,7 @@ There is no gradle/maven dependency for this project for two reasons:
 1. It is so simple and compact that it is honestly not worthwhile :D.
 2. Handing it to you as source files allows you to edit, improve and customise the code for you needs.
 
-Instead to install in your project, just copy-paste the three files located in the *co.uk.epicguru.classes* package. You will need to change the package declaration for it to compile.
+Instead to install in your project, just copy-paste the three files located **[here](https://github.com/Epicguru/VoiceChat/tree/master/Voice%20Chat/src/main/java/co/uk/epucguru/classes)**. You will need to change the package declaration for it to compile.
 ## How to use
 I assume that you have a good understanding and control of Kryonet and Client/Server architechture. However here is an example of implementing the voice chat in both client and server side.
 ### Client Side
