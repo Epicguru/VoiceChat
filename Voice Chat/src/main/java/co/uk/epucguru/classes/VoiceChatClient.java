@@ -12,28 +12,59 @@ import com.esotericsoftware.kryonet.Server;
 
 public class VoiceChatClient implements Disposable{
 
+	/**
+	 * The default sampling rate for audio. 22050.
+	 */
+	private static final int DEFAULT_SAMPLE_RATE = 22050;
 	private AudioRecorder recorder;
 	private AudioDevice player;
-	private int sampleRate = 22050; // Default and standard.
+	private int sampleRate = DEFAULT_SAMPLE_RATE; // Default and standard.
 	private float sendRate = 20f;
 	private short[] data;
 	private float timer;
 	private boolean ready = true;
 	
+	/**
+	 * Creates a new {@link VoiceChatClient} and registers net objects.
+	 * @param kryo The {@link Kryo} object that exists in KryoNet Clients and Servers.
+	 * <li>See <code>client.getKryo()</code> and <code>server.getKryo()</code>.
+	 * @param sampleRate The audio sampling rate, as in samples per second. This defaults to {@link #DEFAULT_SAMPLE_RATE}.
+	 * @see 
+	 * <li> {@link #addReciever(Client)} to allow this voice client to play audio sent from other clients.
+	 * <li> {@link #sendVoice(Client, float)} to send the users voice to other clients, through the server.
+	 */
 	public VoiceChatClient(Kryo kryo, int sampleRate){
 		this(kryo);
 		
 		this.sampleRate = sampleRate;
 	}	
 	
+	/**
+	 * Creates a new {@link VoiceChatClient} and registers net objects.
+	 * @param kryo The {@link Kryo} object that exists in KryoNet Clients and Servers.
+	 * <li>See <code>client.getKryo()</code> and <code>server.getKryo()</code>.
+	 * @see 
+	 * <li> {@link #addReciever(Client)} to allow this voice client to play audio sent from other clients.
+	 * <li> {@link #sendVoice(Client, float)} to send the users voice to other clients, through the server.
+	 */
 	public VoiceChatClient(Kryo kryo){
 		this.registerNetObjects(kryo);
 	}
 	
+	/**
+	 * Gets the audio recording sample rate. Default value is {@link #DEFAULT_SAMPLE_RATE}.
+	 * @return The current sampling rate. This can be changed at runtime, but is not recommended.
+	 */
 	public int getSampleRate(){
 		return this.sampleRate;
 	}
 	
+	/**
+	 * Gets the time per second that the audio is sent to the server. This can be changed at runtime, and will work at all values from 3 to 50.
+	 * A lower value means that more data will be sent per package, but it will also result in more latency. A higher value means less data per package,
+	 * which is generally worse than more, heavy packages, but also gives less latency. A good value for this is between 5 and 10.
+	 * @return The current amount of times that audio data is sent per second.
+	 */
 	public float getSendRate(){
 		return this.sendRate;
 	}
@@ -46,8 +77,14 @@ public class VoiceChatClient implements Disposable{
 		this.player = Gdx.audio.newAudioDevice(this.getSampleRate(), true);
 	}
 	
-	public int getRecomendedBufferSize(){
-		return (int) (this.getSampleRate() / (float)this.getSampleRate() * 2f);
+	/**
+	 * Gets the recommended value for the buffer size of clients and servers.
+	 * Setting buffer size to this will ensure that the client and server always has a buffer large enough for the audio data.
+	 * The return value is:
+	 * <li> (Sample Rate / Send Rate) * 2
+	 */
+	public int getRecommendedBufferSize(){
+		return (int) (this.getSampleRate() / (float)this.getSendRate() * 2f);
 	}
 	
 	protected void registerNetObjects(Kryo kryo){
@@ -55,11 +92,15 @@ public class VoiceChatClient implements Disposable{
 		kryo.register(VoiceNetData.class);
 	}
 	
+	/**
+	 * Makes this chat client process and respond to audio sent from the server. If this message is not called, you will not hear anything
+	 * from the server!
+	 * @param client The client that audio data will be sent to from the server. Just use the normal client.
+	 */
 	public void addReciever(Client client){
 		
 		if(this.player == null)
 			this.createPlayer();
-		AudioDevice player = this.player;
 		
 		client.addListener(new Listener(){
 			public void received(Connection connection, Object object) {
@@ -72,15 +113,26 @@ public class VoiceChatClient implements Disposable{
 					short[] data = message.getData();
 					
 					// Play audio
-					Thread thread = new Thread(() -> {						
-						player.writeSamples(data, 0, data.length);
-					});
-					thread.start();
+					processAudio(data, connection, message);
 				}
 			}			
 		});
 	}
 	
+	/**
+	 * Plays audio received from the server.
+	 * @param samples The samples of audio received.
+	 * @param connection The connection to the server.
+	 * @param message The message received.
+	 */
+	public void processAudio(short[] samples, Connection connection, VoiceNetData message){
+		Thread thread = new Thread(() -> {						
+			player.writeSamples(data, 0, data.length);
+		});
+		thread.start();
+	}
+	
+	@Deprecated
 	public void addReciever(Server server){
 		
 		if(this.player == null)
@@ -105,6 +157,15 @@ public class VoiceChatClient implements Disposable{
 		});
 	}
 	
+	/**
+	 * Sends what you are saying to the other connections! This method should be called whenever the client wants to send audio, 
+	 * such as when he/she presses a button. This method does not block at all, as recording audio is done in another thread.
+	 * The minimum time recorded is equal to:
+	 * <code>((SampleRate / SendRate) / SampleRate)</code> in seconds. The maximum time recorded is infinite.
+	 * @param client The client to send the data on.
+	 * @param delta The time, in seconds, between concurrent calls to this method.
+	 * If this method is called 60 times per second, this value should be (1/60). In LibGDX, use <code>Gdx.graphics.getDeltaTime()</code>.
+	 */
 	public void sendVoice(Client client, float delta){
 		
 		float interval = 1f / this.getSendRate();
@@ -139,6 +200,10 @@ public class VoiceChatClient implements Disposable{
 		}		
 	}	
 	
+	/**
+	 * Disposes this voice chat client, which releases all resources but also makes this object unusable. 
+	 * Any calls to methods after this will NOT work and will crash.
+	 */
 	public void dispose(){
 		this.data = null;
 		this.player.dispose();
