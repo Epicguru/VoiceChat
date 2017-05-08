@@ -75,11 +75,11 @@ public void start(){
   
    // Now we need to enable the server to transmit audio data.
    server.addListener(new Listener(){
-	    public void received(Connection connection, Object object) {
-          // This 'bounces' back any audio data sent from clients.
-	        relay.relayVoice(connection, object, server);
-	    }					
-	 });
+   	public void received(Connection connection, Object object) {
+      // This 'bounces' back any audio data sent from clients.
+		  relay.relayVoice(connection, object, server);
+    }
+   });
    
    // Done! No updating necessary for the server.
 }
