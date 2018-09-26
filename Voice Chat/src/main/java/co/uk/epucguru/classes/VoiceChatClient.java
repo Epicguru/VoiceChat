@@ -138,8 +138,9 @@ public class VoiceChatClient implements Disposable{
 	 * @param message The message received.
 	 */
 	public void processAudio(short[] samples, Connection connection, VoiceNetData message){
-		Thread thread = new Thread(() -> {						
-			player.writeSamples(data, 0, data.length);
+		Thread thread = new Thread(() -> {
+			short[] received = message.getData();
+			player.writeSamples(received, 0, received.length);
 		});
 		thread.start();
 	}
