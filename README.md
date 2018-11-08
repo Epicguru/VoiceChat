@@ -1,5 +1,7 @@
 # Voice Chat by James Billy
 A simple voice chat system using Kryonet and LibGDX.
+
+_If you are interested in C# or other voice chat projects, check out my voice chat client/server project [here](https://github.com/Epicguru/CChat2). It is more feature rich but is not a library, rather a standalone application._
 ## Info
 You are allowed to use this mini-library in any way you wish. You may use it in any project, commercial or not, and feel free to edit the source code. Just please note that I put some time and effort into making this, so it would be great if you left this here so that people know that it was me that made this. Thanks. 
 (Also if you are feeling generous or you appreciate what I have done, it would be great if you put me in the 'credits' section of you game or project.)
